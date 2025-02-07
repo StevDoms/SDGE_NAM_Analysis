@@ -2,6 +2,26 @@
 
 ---
 
+## Project Overview  
+
+This project is divided into two main parts: **Model Training** and **Analysis**.  
+
+## 1. Model Training  
+To train the model, we follow these key steps:  
+- **Obtain NAM Data** – Collect North American Mesoscale (NAM) model data.  
+- **Retrieve Elevation Data** – Gather elevation data for both weather stations and NAM grid points.  
+- **Preprocess Data** – Prepare the dataset for model input, including cleaning and feature engineering.  
+- **Train the LightGBM Model** – Use LightGBM to train a predictive model.  
+- **Make Predictions** – Utilize the trained model to generate forecasts.  
+
+## 2. Analysis  
+For analysis, we focus on:  
+- **Exploratory Data Analysis (EDA)** – Visualizing and understanding the dataset.  
+- **Error Assessment** – Evaluating the accuracy of NAM predictions by comparing them to actual measurements.  
+- **Notebook Implementation** – Conducting the analysis in a Jupyter Notebook for better visualization and documentation.
+
+---
+
 ## How to Run the Code
 
 ### Prerequisites
@@ -26,59 +46,76 @@
 
 1. Open a terminal and navigate to the project directory:
    ```bash
-   cd /path/to/SDGE_NAM_Analysis
+   cd SDGE_NAM_Analysis
    ```
 
 2. Run the following commands to set up the Conda environment:
    ```bash
    conda env create -f environment.yml
-   conda activate geo_env
+   conda activate venv
    ```
-   Note if you are running in DSMLP you might get an instruction CondaError: Run 'conda init' before 'conda activate', if so run before conda activate geo_env:
+   Note: if you are running the code in DSMLP, you might get the following error `CondaError: Run 'conda init' before 'conda activate'`.   
+   If this happens, run the following:   
 
    ```bash
    conda init
    source ~/.bashrc
+   conda activate venv
    ```
 
-4. After the Conda environment is activated, you are prepared to run the project code.
+3. After the Conda environment is activated, the project is ready to run.
 
 ---
 
-### Step 2: Building the Project using 
+### Step 2: Model Training  
 
-If you need to run specific components of the pipeline, use the following commands:
+This step involves training the LightGBM model by obtaining necessary datasets, preprocessing data, and running the model.  
 
-- **Data Processing**: Prepares and merges weather data.
+#### 1. Obtain NAM Data  
+This script scrapes the SDG&E data website and compiles the NAM data.  
+**Note:** It generates a CSV file and only needs to be run once. This script might not work on DSMLP; please run it locally and upload the `nam.csv` into the `data/raw` directory.   
   ```bash
-  python run.py merge
+  python run.py create_nam_file
   ```
 
-- **PSPS Probabilities**: Calculates PSPS probabilities for weather stations.
+#### 2. Retrieve Elevation Data
+This script gathers elevation data using api.open-elevation.com.   
+**Note:** Ensure the **Obtain NAM Data** script has been run first. This script also generates a CSV file and only needs to be run once.
   ```bash
-  python run.py psps
+  python run.py create_elevation_file
   ```
 
-- **Filter PSPS Stations**: Filters high-risk PSPS stations based on a threshold.
+#### 3. Preprocess Data
+This step processes the collected data to prepare it for training the LightGBM model.
   ```bash
-  python run.py filter
+  python run.py process_model_input
   ```
 
-- **VRI and Conductor Merge**: Merges conductor and vegetation risk index (VRI) data.
+#### 4. Train the LightGBM Model
+This script trains the LightGBM model using the preprocessed dataset.
   ```bash
-  python run.py merge_vri
+  python run.py light_gbm_model
   ```
 
-- **Analyze spans**: Builds a directed graph of spans for upstream/downstream analysis to perform span analysis and and calculate probabilities of each span.
+#### 5. Make Predictions
+This script uses the trained LightGBM model to predict errors on both training and unseen data.
   ```bash
-  python run.py analyze_spans
+  python run.py predict_model
   ```
 
-- **Feeder analysis**: Perform feeder analysis by exploring the annual customers affected for a given parent feeder id and predicting number of customers affected in 10 years.
+#### Running the Full Training Pipeline
+To execute all steps in sequence, run:
   ```bash
-  python run.py feeder_analysis
+  python run.py create_nam_file create_elevation_file process_model_input, light_gbm_model predict_model
   ```
 
+#### Recommended Run
+For better organization, execute these commands separately as follows:
+  ```bash
+  python run.py create_nam_file 
+  python run.py create_elevation_file 
+  python run.py process_model_input, light_gbm_model predict_model
+  ```
 ---
 
 ### Step 4: Outputs
