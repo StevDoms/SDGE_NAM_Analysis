@@ -41,6 +41,10 @@ def generate_elevation_csv(gdf: List[gpd.GeoDataFrame]):
     # # Save file as CSV
     nam_filtered_gpd.to_csv("./data/modified/nam_with_elevation.csv", index=False)
 
+    print("Elevation File CSV completed.")
+    
+    return
+
     
 
     
