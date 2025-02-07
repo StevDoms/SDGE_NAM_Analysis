@@ -1,0 +1,24 @@
+name: venv
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9
+  - pandas
+  - geopandas
+  - shapely
+  - numpy
+  - lightgbm
+  - scikit-learn
+  - requests
+  - beautifulsoup4
+  - folium
+  - matplotlib
+  - seaborn
+  - xarray
+  - openpyxl
+  - jupyterlab
+  - pip
+  - pip:
+      - branca
+      - ipython
