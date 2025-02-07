@@ -12,11 +12,12 @@ def haversine_distance(point1: Point, point2: Point) -> float:
 def create_point(longitude: float, latitude: float) -> Point:
     return Point(longitude, latitude)
 
-def get_elevation(longitude: float, latitude: float) -> Optional[float]:
+def get_elevation(longitude: Optional[float], latitude: Optional[float]) -> Optional[float]:
     url = f"https://api.open-elevation.com/api/v1/lookup?locations={latitude},{longitude}"
     
     try:
         response = requests.get(url)
+        print(response)
         
         # Check if the response status is successful
         if response.status_code != 200:
@@ -30,6 +31,7 @@ def get_elevation(longitude: float, latitude: float) -> Optional[float]:
         
         # Try to parse the response as JSON
         response_json = response.json()
+        print(response_json)
         
         # Return elevation if the 'results' key is found in the response
         return response_json['results'][0]['elevation'] if "results" in response_json else None

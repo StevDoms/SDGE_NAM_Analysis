@@ -4,19 +4,28 @@ from typing import List
 import geopandas as gpd
 import pandas as pd
 
-from src.data import orange_county_geometry
+from src.data import orange_county_geometry, san_diego_county_geometry
 from src.util import get_elevation
 
-def generate_elevation_csv(gis_weather_station_gpd: gpd.GeoDataFrame, src_vri_snapshot_gpd: gpd.GeoDataFrame, nam_gpd: gpd.GeoDataFrame, san_diego_county_gpd: gpd.GeoDataFrame):
+def generate_elevation_csv(gis_weather_station_gpd: gpd.GeoDataFrame, src_vri_snapshot_gpd: gpd.GeoDataFrame, nam_gpd: gpd.GeoDataFrame):
+
+    # Define the directory path
+    file_save_path = "./data/modified"
+    
+    # Ensure the directory exists
+    os.makedirs(file_save_path, exist_ok=True)
 
     # Get elevation for each weather station
     gis_weather_station_gpd['station_elevation_m'] = gis_weather_station_gpd.apply(lambda row: get_elevation(row['geometry'].x, row['geometry'].y), axis=1)
-    
+
     # Save weather station gpd as CSV file
-    gis_weather_station_gpd.to_csv("./data/modified/gis_weather_station_with_elevation.csv", index=False)
+    station_file_path = os.path.join(file_save_path, "gis_weather_station_with_elevation.csv")
+    gis_weather_station_gpd.to_csv(station_file_path, index=False)
+
+    print(f"Station elevation saved to {station_file_path}")
 
     # Filter the geometry column
-    san_diego_county_gpd = san_diego_county_gpd[['geometry']]
+    san_diego_county_gpd = san_diego_county_geometry()
     orange_county_gpd = orange_county_geometry()
 
     # Filter NAM data within all VRI Polygon, San Diego county, and Orange County
@@ -38,9 +47,10 @@ def generate_elevation_csv(gis_weather_station_gpd: gpd.GeoDataFrame, src_vri_sn
     nam_filtered_gpd = nam_filtered_gpd.merge(nam_filtered_geometry_unique, on='geometry', how='inner')
 
     # # Save file as CSV
-    nam_filtered_gpd.to_csv("./data/modified/nam_with_elevation.csv", index=False)
+    nam_file_path = os.path.join(file_save_path, "nam_with_elevation.csv")
+    nam_filtered_gpd.to_csv(nam_file_path, index=False)
 
-    print("Elevation File CSV completed.")
+    print(f"NAM elevation saved to {nam_file_path}")
     
     return
 

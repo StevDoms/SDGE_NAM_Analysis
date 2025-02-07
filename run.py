@@ -27,11 +27,12 @@ def main(targets):
         generate_nam_csv(wind_speed_path)
 
     if "create_elevation_file" in targets:
-        gis_weather_station, src_vri_snapshot, nam, san_diego_county_gpd, windspeed_snapshot = generate_df(raw_data_path)
+        print(raw_data_path)
+        gis_weather_station, src_vri_snapshot, nam, windspeed_snapshot = generate_df(raw_data_path) 
         gis_weather_station, windspeed_snapshot = preprocess_df(gis_weather_station, windspeed_snapshot)
         gis_weather_station_gpd, src_vri_snapshot_gpd, nam_gpd = generate_gdf(gis_weather_station, src_vri_snapshot, nam)
         
-        generate_elevation_csv(gis_weather_station_gpd, src_vri_snapshot_gpd, nam_gpd, san_diego_county_gpd)
+        generate_elevation_csv(gis_weather_station_gpd, src_vri_snapshot_gpd, nam_gpd)
         
     if "process_model_input" in targets:
         model_input_file_path = modified_data_path + [raw_data_path[1], raw_data_path[4]]

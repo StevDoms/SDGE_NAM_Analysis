@@ -34,9 +34,14 @@ def generate_gdf(gis_weather_station: pd.DataFrame, src_vri_snapshot: pd.DataFra
     return [gis_weather_station_gpd, src_vri_snapshot_gpd, nam_gpd]
 
 def orange_county_geometry():
-    orange_county_geometry = gpd.read_file("data/raw/Congressional.shp").iloc[[5]] # Southern Orange County
+    orange_county_geometry = gpd.read_file("./data/raw/Congressional.shp").iloc[[5]] # Southern Orange County
     orange_county_gpd = gpd.GeoDataFrame(orange_county_geometry, geometry='geometry', crs=f"EPSG:4326") 
     return orange_county_gpd
+
+def san_diego_county_geometry():
+    san_diego_county_geometry = gpd.read_file("./data/raw/San_Diego_County_Boundary.geojson")
+    san_diego_county_gpd = san_diego_county_geometry[['geometry']] 
+    return san_diego_county_gpd
 
 def preprocess_df(gis_weather_station: pd.DataFrame, windspeed_snapshot: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     gis_weather_station = gis_weather_station.drop_duplicates(subset=['weatherstationcode'], keep='first')
