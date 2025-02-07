@@ -9,8 +9,7 @@ def generate_df(input_list: List[str]) -> List[pd.DataFrame]:
     return [pd.read_csv(file) for file in input_list]
     
 
-def generate_gdf(df_list: List[pd.DataFrame]) -> List[gpd.GeoDataFrame]:
-    gis_weather_station, src_vri_snapshot, nam = df_list
+def generate_gdf(gis_weather_station: pd.DataFrame, src_vri_snapshot: pd.DataFrame, nam: pd.DataFrame) -> List[gpd.GeoDataFrame]:
 
     # EPSG:4431
     gis_weather_station['geometry'] = gis_weather_station['shape'].apply(wkt.loads)
@@ -97,8 +96,8 @@ def preprocess_gdf(gis_weather_station_gpd: gpd.GeoDataFrame, src_vri_snapshot_g
 
 def filter_nam_outside_vri(nam_gpd: gpd.GeoDataFrame, model_gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     # Get DataFrame subset
-    nam_gpd_subset = nam_gpd[['latitude', 'longitude', 'date', 'average_wind_speed', 'geometry']]
-    model_gdf_subset = model_gdf[['latitude_right', 'longitude_right', 'nam_date', 'nam_wind_speed', 'geometry']]
+    nam_gpd_subset = nam_gpd[['latitude', 'longitude', 'date', 'average_wind_speed', 'geometry', 'nam_elevation_m']].rename(columns={'average_wind_speed': 'nam_wind_speed', 'date': 'nam_date'})
+    model_gdf_subset = model_gdf[['latitude_right', 'longitude_right']]
     
     # Merge based on latitude and longitude, specifying left and right columns
     merged_df = pd.merge(nam_gpd_subset, model_gdf_subset, left_on=['latitude', 'longitude'], right_on=['latitude_right', 'longitude_right'], how='left', indicator=True)
@@ -107,14 +106,13 @@ def filter_nam_outside_vri(nam_gpd: gpd.GeoDataFrame, model_gdf: gpd.GeoDataFram
     nam_not_in_vri = merged_df[merged_df['_merge'] == 'left_only']
     
     # Reset the index and drop the merge indicator column
-    nam_not_in_vri = nam_not_in_vri.reset_index(drop=True)
-    
-    # Keep relevant columns and rename geometry_x to geometry
-    nam_not_in_vri = nam_not_in_vri[['latitude', 'longitude', 'date', 'average_wind_speed', 'geometry_x']].rename(columns={'geometry_x': 'geometry'})
+    nam_not_in_vri = nam_not_in_vri.reset_index(drop=True).drop(columns=['latitude_right', 'longitude_right', '_merge'])
+    nam_not_in_vri['month'] = pd.to_datetime(nam_not_in_vri['nam_date']).dt.month
+    nam_not_in_vri['day_of_year'] = pd.to_datetime(nam_not_in_vri['nam_date']).dt.dayofyear
     
     return nam_not_in_vri
 
-def nam_outside_vri_model_data(nam_outside_vri: gpd.GeoDataFrame, gis_weather_station_gpd: gpd.GeoDataFrame) -> pd.DataFrame:
+def get_nam_outside_vri_nearest_station(nam_outside_vri: gpd.GeoDataFrame, gis_weather_station_gpd: gpd.GeoDataFrame) -> pd.DataFrame:
 
     # Get the unique geometry
     nam_outside_vri_unique_geometry = nam_outside_vri[['geometry']].drop_duplicates().reset_index(drop=True)

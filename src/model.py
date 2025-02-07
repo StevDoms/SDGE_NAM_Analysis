@@ -84,3 +84,21 @@ def light_gbm(input_gdf: gpd.GeoDataFrame) -> lgb.LGBMRegressor:
     print(f"R² Score: {r2:.3f}")
 
     return best_model
+
+
+def predict_light_gbm_model(model: lgb.LGBMRegressor, input_data: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+    features = [
+        "nam_wind_speed", "nam_elevation_m", "station_elevation_m",
+        "nam_distance_from_station_km", "month", "day_of_year"
+    ]
+    
+    predictor_data = input_data[features]
+    target_prediction = model.predict(predictor_data)
+
+    input_data['abs_wind_speed_error_pred'] = target_prediction
+
+    return input_data
+
+
+
+    

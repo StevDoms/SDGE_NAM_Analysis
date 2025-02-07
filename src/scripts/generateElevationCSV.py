@@ -7,8 +7,7 @@ import pandas as pd
 from src.data import orange_county_geometry
 from src.util import get_elevation
 
-def generate_elevation_csv(gdf: List[gpd.GeoDataFrame]):
-    gis_weather_station_gpd, src_vri_snapshot_gpd, nam_gpd, san_diego_county_gpd = gdf
+def generate_elevation_csv(gis_weather_station_gpd: gpd.GeoDataFrame, src_vri_snapshot_gpd: gpd.GeoDataFrame, nam_gpd: gpd.GeoDataFrame, san_diego_county_gpd: gpd.GeoDataFrame):
 
     # Get elevation for each weather station
     gis_weather_station_gpd['station_elevation_m'] = gis_weather_station_gpd.apply(lambda row: get_elevation(row['geometry'].x, row['geometry'].y), axis=1)
