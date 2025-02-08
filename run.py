@@ -35,7 +35,7 @@ def main(targets):
         generate_elevation_csv(gis_weather_station_gpd, src_vri_snapshot_gpd, nam_gpd)
         
     if "process_model_input" in targets:
-        model_input_file_path = modified_data_path + [raw_data_path[1], raw_data_path[4]]
+        model_input_file_path = modified_data_path + [raw_data_path[1], raw_data_path[3]]
         gis_weather_station_with_elevation, nam_with_elevation, src_vri_snapshot, windspeed_snapshot = generate_df(model_input_file_path)
         gis_weather_station_with_elevation, windspeed_snapshot = preprocess_df(gis_weather_station_with_elevation, windspeed_snapshot)
         gis_weather_station_with_elevation_gpd, src_vri_snapshot_gpd, nam_with_elevation_gpd = generate_gdf(gis_weather_station_with_elevation, src_vri_snapshot, nam_with_elevation)
