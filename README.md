@@ -6,7 +6,7 @@
 
 This project is divided into two main parts: **Model Training** and **Analysis**.  
 
-## 1. Model Training  
+### 1. Model Training  
 To train the model, we follow these key steps:  
 - **Obtain NAM Data** – Collect North American Mesoscale (NAM) model data.  
 - **Retrieve Elevation Data** – Gather elevation data for both weather stations and NAM grid points.  
@@ -14,7 +14,7 @@ To train the model, we follow these key steps:
 - **Train the LightGBM Model** – Use LightGBM to train a predictive model.  
 - **Make Predictions** – Utilize the trained model to generate forecasts.  
 
-## 2. Analysis  
+### 2. Analysis  
 For analysis, we focus on:  
 - **Exploratory Data Analysis (EDA)** – Visualizing and understanding the dataset.  
 - **Error Assessment** – Evaluating the accuracy of NAM predictions by comparing them to actual measurements.  
@@ -25,12 +25,12 @@ For analysis, we focus on:
 ## How to Run the Code
 
 ### Prerequisites
-1. Clone the code repository by executing git clone in your selected folder:
+1. Clone the code repository by executing the following:
    ```bash
-   https://github.com/StevDoms/SDGE_NAM_Analysis.git
+   git clone https://github.com/StevDoms/SDGE_NAM_Analysis.git
    ```
 3. Ensure that [Anaconda](https://www.anaconda.com/products/distribution) is installed.
-4. Create a `data/raw` directory and place the following data within:
+4. Create a `data/raw` directory within the root directory and place the following data within:
     ```
     data/raw/
         gis_weatherstation_shape_2024_10_04.csv
@@ -54,7 +54,7 @@ For analysis, we focus on:
    conda env create -f environment.yml
    conda activate venv
    ```
-   Note: if you are running the code in DSMLP, you might get the following error `CondaError: Run 'conda init' before 'conda activate'`.   
+   **Note**: if you are running the code in DSMLP, you might get the following error `CondaError: Run 'conda init' before 'conda activate'`.   
    If this happens, run the following:   
 
    ```bash
@@ -79,8 +79,8 @@ This script scrapes the SDG&E data website and compiles the NAM data.
   ```
 
 #### 2. Retrieve Elevation Data
-This script gathers elevation data using api.open-elevation.com.   
-**Note:** Ensure the **Obtain NAM Data** script has been run first. This script also generates a CSV file and only needs to be run once.
+This script gathers elevation data using the open-elevation API.   
+**Note:** Ensure the **Obtain NAM Data** script has been run beforehand. This script also generates a CSV file and only needs to be run once.
   ```bash
   python run.py create_elevation_file
   ```
@@ -98,7 +98,7 @@ This script trains the LightGBM model using the preprocessed dataset.
   ```
 
 #### 5. Make Predictions
-This script uses the trained LightGBM model to predict errors on both training and unseen data.
+This script uses the trained LightGBM model to predict errors on both training and unseen data. The resulting data will be saved within a CSV file.
   ```bash
   python run.py predict_model
   ```
@@ -106,7 +106,7 @@ This script uses the trained LightGBM model to predict errors on both training a
 #### Running the Full Training Pipeline
 To execute all steps in sequence, run:
   ```bash
-  python run.py create_nam_file create_elevation_file process_model_input, light_gbm_model predict_model
+  python run.py create_nam_file create_elevation_file process_model_input light_gbm_model predict_model
   ```
 
 #### Recommended Run
@@ -114,9 +114,8 @@ For better organization, execute these commands separately as follows:
   ```bash
   python run.py create_nam_file 
   python run.py create_elevation_file 
-  python run.py process_model_input, light_gbm_model predict_model
+  python run.py process_model_input light_gbm_model predict_model
   ```
 ---
 
-### Step 4: Outputs
-Note: Our project's expected outputs are not displayed in the repository as there is a confidentiality agreement with SDG&E. Feel free to run the commands in the terminal or run the proj1_notebook.ipynb to view the output. The notebook will provide a better experience and complete picture of the project.
+### Step 3: Analysis
