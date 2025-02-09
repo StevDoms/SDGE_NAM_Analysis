@@ -23,7 +23,7 @@ def main(targets):
     output_model_path = [os.path.join('./data/modified', file_path) for file_path in data_params["model_prediction"]]
 
     if "create_nam_file" in targets:
-        wind_speed_path = raw_data_path[4]
+        wind_speed_path = raw_data_path[3]
         generate_nam_csv(wind_speed_path)
 
     if "create_elevation_file" in targets:
