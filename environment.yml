@@ -16,6 +16,9 @@ dependencies:
   - matplotlib
   - seaborn
   - xarray
+  - h5py  
+  - netCDF4 
+  - h5netcdf 
   - openpyxl
   - jupyterlab
   - pip
@@ -23,4 +26,3 @@ dependencies:
   - pip:
       - branca
       - ipython
-
