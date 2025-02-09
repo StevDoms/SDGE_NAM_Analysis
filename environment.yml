@@ -19,6 +19,8 @@ dependencies:
   - openpyxl
   - jupyterlab
   - pip
+  - geopy
   - pip:
       - branca
       - ipython
+

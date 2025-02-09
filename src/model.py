@@ -28,7 +28,7 @@ def light_gbm(input_gdf: gpd.GeoDataFrame) -> lgb.LGBMRegressor:
     )
     
     # Define LightGBM model
-    model = lgb.LGBMRegressor(random_state=42, verbose=-1)
+    model = lgb.LGBMRegressor(random_state=42, verbose=1)
     
     # Define hyperparameter grid for tuning
     param_dist = {
@@ -61,7 +61,7 @@ def light_gbm(input_gdf: gpd.GeoDataFrame) -> lgb.LGBMRegressor:
         n_iter=50,  # Number of random combinations to try
         scoring="neg_mean_absolute_error",
         cv=5,  # 5-fold cross-validation
-        verbose=1,
+        verbose=2,
         random_state=42,
         n_jobs=-1  # Use all available cores
     )
