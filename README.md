@@ -25,7 +25,7 @@ For analysis, we focus on:
 ## How to Run the Code
 
 ### Prerequisites
-Note: It is recommended to run with 64MB of memory and 8 cpus. In DSMLP for example its run with "launch-scipy-ml.sh -W DSC180A_FA24_A00 -c 8 -m 64"
+Note: It is recommended to run with 64GB of memory and 8 cpus. In DSMLP for example its run with "launch-scipy-ml.sh -W DSC180A_FA24_A00 -c 8 -m 64"
 1. Clone the code repository by executing the following:
    ```bash
    git clone https://github.com/StevDoms/SDGE_NAM_Analysis.git
