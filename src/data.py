@@ -7,8 +7,12 @@ from src.util import create_point, haversine_distance
 
 def generate_df(input_list: List[str]) -> List[pd.DataFrame]:
     return [pd.read_csv(file) for file in input_list]
-    
 
+def convert_to_gdf(df: pd.DataFrame) -> gpd.GeoDataFrame:
+    df['geometry'] = df['geometry'].apply(wkt.loads)
+    gdf = gpd.GeoDataFrame(df, geometry='geometry', crs=f"ESPG:4326")
+    return gdf
+    
 def generate_gdf(gis_weather_station: pd.DataFrame, src_vri_snapshot: pd.DataFrame, nam: pd.DataFrame) -> List[gpd.GeoDataFrame]:
 
     # EPSG:4431
