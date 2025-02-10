@@ -120,3 +120,7 @@ For better organization, execute these commands separately as follows:
 ---
 
 ### Step 3: Analysis
+To run the notebooks in this repository, we need to have the conda environment work in the Jupyter notebooks as well. Prior to running the notebooks ,please run the code below in the terminal after activating the conda environment.
+  ```bash
+  python run.py predict_model
+  ```

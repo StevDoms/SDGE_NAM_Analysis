@@ -21,6 +21,7 @@ dependencies:
   - h5netcdf 
   - openpyxl
   - jupyterlab
+  - ipykernel
   - pip
   - geopy
   - pip:
