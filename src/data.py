@@ -9,8 +9,24 @@ def generate_df(input_list: List[str]) -> List[pd.DataFrame]:
     return [pd.read_csv(file) for file in input_list]
 
 def convert_to_gdf(df: pd.DataFrame) -> gpd.GeoDataFrame:
+    """
+    Converts a DataFrame with WKT geometry strings to a GeoDataFrame.
+    
+    Parameters:
+        df (pd.DataFrame): A DataFrame containing a 'geometry' column with WKT strings.
+    
+    Returns:
+        gpd.GeoDataFrame: A GeoDataFrame with a valid geometry column.
+    """
+    if 'geometry' not in df.columns:
+        raise ValueError("DataFrame must contain a 'geometry' column.")
+
+    # Convert WKT strings to Shapely geometry
     df['geometry'] = df['geometry'].apply(wkt.loads)
-    gdf = gpd.GeoDataFrame(df, geometry='geometry', crs=f"ESPG:4326")
+
+    # Create GeoDataFrame with correct CRS
+    gdf = gpd.GeoDataFrame(df, geometry='geometry', crs="EPSG:4326")
+    
     return gdf
     
 def generate_gdf(gis_weather_station: pd.DataFrame, src_vri_snapshot: pd.DataFrame, nam: pd.DataFrame) -> List[gpd.GeoDataFrame]:
