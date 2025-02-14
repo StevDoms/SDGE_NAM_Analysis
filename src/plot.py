@@ -151,7 +151,7 @@ def plot_correlation_matrix(data, method="pearson", title="Correlation Matrix", 
 
 def plot_map(weather_station: gpd.GeoDataFrame, vri_snapshot: gpd.GeoDataFrame, nam: Union[gpd.GeoDataFrame, pd.DataFrame], nam_color_column: str, output_file_name: str):
     # Initialize the map centering at San Diego City
-    m = folium.Map(location=[32.7157, -117.1611], zoom_start=3, tiles="OpenStreetMap")
+    m = folium.Map(location=[32.7157, -117.1611], zoom_start=9, tiles="OpenStreetMap")
     
     # NAM group
     nam_group = folium.FeatureGroup(name='nam')
