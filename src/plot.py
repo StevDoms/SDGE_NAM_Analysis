@@ -102,6 +102,19 @@ def plot_data(data, x, y=None, plot_type="hist", bins=30, title=None, xlabel=Non
     plt.tight_layout()
     plt.show()
 
+def plot_kde(data: pd.DataFrame, nam_col: str, station_col: str):
+    """Plots the KDE distribution of NAM wind speed vs. weather station wind speed."""
+    plt.figure(figsize=(10, 6))
+    sns.kdeplot(data[nam_col], fill=True, label="NAM Wind Speed", alpha=0.5)
+    sns.kdeplot(data[station_col], fill=True, label="Weather Station Wind Speed", alpha=0.5)
+    
+    plt.xlabel("Wind Speed (m/s)")
+    plt.ylabel("Density")
+    plt.title("Distribution of NAM Wind Speed vs. Weather Station Wind Speed")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
 def plot_correlation_matrix(data, method="pearson", title="Correlation Matrix", cmap="coolwarm", annot=True):
     """
     Plots the correlation matrix of a DataFrame.
@@ -113,7 +126,7 @@ def plot_correlation_matrix(data, method="pearson", title="Correlation Matrix", 
         cmap (str): Colormap for the heatmap. Default is "coolwarm".
         annot (bool): Whether to display correlation values in the heatmap. Default is True.
     """
-    plt.figure(figsize=(10, 8))
+    plt.figure(figsize=(8, 6))
     correlation_matrix = data.corr(method=method)
     sns.heatmap(correlation_matrix, annot=annot, fmt=".2f", cmap=cmap, linewidths=0.5, square=True)
     
