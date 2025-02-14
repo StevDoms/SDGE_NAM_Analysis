@@ -1,7 +1,19 @@
+import os
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 import seaborn as sns
 import pandas as pd
-import matplotlib.dates as mdates
+import geopandas as gpd
+import branca
+import folium
+from folium import plugins
+from folium.plugins import HeatMap, MarkerCluster
+from shapely import wkt
+from shapely.geometry import Point
+import branca
+from IPython.display import IFrame
+
+from typing import Union
 
 def plot_data(data, x, y=None, plot_type="hist", bins=30, title=None, xlabel=None, ylabel=None, 
               color="blue", second_data=None, second_x=None, second_color="red", alpha=0.5, 
@@ -137,7 +149,7 @@ def plot_correlation_matrix(data, method="pearson", title="Correlation Matrix", 
     plt.show()
 
 
-def plot_map(weather_station: '', vri_snapshot, nam, nam_color_column, output_file_name):
+def plot_map(weather_station: gpd.GeoDataFrame, vri_snapshot: gpd.GeoDataFrame, nam: Union[gpd.GeoDataFrame, pd.DataFrame], nam_color_column: str, output_file_name: str):
     # Initialize the map centering at San Diego City
     m = folium.Map(location=[32.7157, -117.1611], zoom_start=3, tiles="OpenStreetMap")
     
@@ -145,14 +157,14 @@ def plot_map(weather_station: '', vri_snapshot, nam, nam_color_column, output_fi
     nam_group = folium.FeatureGroup(name='nam')
     
     # Normalize the MAE values to ensure colors are mapped to a range
-    min_value, max_value = errors[nam_color_column].min(), errors[nam_color_column].max()
+    min_value, max_value = nam[nam_color_column].min(), nam[nam_color_column].max()
     
     # Define colormap for yellow to red
     colormap = branca.colormap.LinearColormap(['#FFFF00', '#FF0000'], vmin=min_value, vmax=max_value)
     
     # Plotting the NAM points
     for _, row in nam.iterrows():
-        latitude, longitude = row["NAM_geometry"].y, row["NAM_geometry"].x
+        latitude, longitude = row["geometry"].y, row["geometry"].x
         
         # Color based on the MAE value using the colormap
         color = colormap(row[nam_color_column])
@@ -166,7 +178,7 @@ def plot_map(weather_station: '', vri_snapshot, nam, nam_color_column, output_fi
             fill_opacity=0.9,  
             opacity=0.9,    
             tooltip=(
-                
+                f"Test"
         )
         ).add_to(nam_group)
     
@@ -227,6 +239,11 @@ def plot_map(weather_station: '', vri_snapshot, nam, nam_color_column, output_fi
     # Add layer control to toggle feature groups
     folium.LayerControl().add_to(m)
     
-    # Save the map
-    map_path = os.path.join('plots', output_file_name)
+    # Check directory exist
+    plots_dir = "plots"
+    os.makedirs(plots_dir, exist_ok=True)
+
+    # Save Map
+    map_path = os.path.join(plots_dir, output_file_name)
     m.save(map_path)
+
