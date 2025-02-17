@@ -2,6 +2,7 @@ import os
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import seaborn as sns
+import numpy as np
 import pandas as pd
 import geopandas as gpd
 import branca
@@ -9,9 +10,10 @@ import folium
 from folium import plugins
 from folium.plugins import HeatMap, MarkerCluster
 from shapely import wkt
-from shapely.geometry import Point
+from shapely.geometry import Point, Polygon, MultiPolygon
 import branca
 from IPython.display import IFrame
+import alphashape
 
 from typing import Union
 
@@ -76,6 +78,16 @@ def plot_data(data, x, y=None, plot_type="hist", bins=30, title=None, xlabel=Non
         if y is None:
             raise ValueError("Scatter plot requires both x and y columns.")
         plt.scatter(data[x], data[y], color=color, alpha=0.7)
+
+        # Fit a line of best fit (linear regression)
+        coeffs = np.polyfit(data[x], data[y], 1)
+        trendline = np.poly1d(coeffs)
+    
+        # Plot the trendline
+        x_range = np.linspace(data[x].min(), data[x].max(), 100)
+        plt.plot(x_range, trendline(x_range), color='red', linestyle='--', label="Best fit line")
+    
+        plt.legend()
     
     elif plot_type == "line":
         if y is None:
@@ -149,9 +161,49 @@ def plot_correlation_matrix(data, method="pearson", title="Correlation Matrix", 
     plt.show()
 
 
-def plot_map(weather_station: gpd.GeoDataFrame, vri_snapshot: gpd.GeoDataFrame, nam: Union[gpd.GeoDataFrame, pd.DataFrame], nam_color_column: str, output_file_name: str):
+def plot_map(weather_station: gpd.GeoDataFrame, vri_snapshot: gpd.GeoDataFrame, nam: Union[gpd.GeoDataFrame, pd.DataFrame], nam_color_column: str, output_file_name: str, show_alpha_shapes: bool = False, alpha: float = 1.0, cluster_centeroid: np.array = np.array([])):
     # Initialize the map centering at San Diego City
     m = folium.Map(location=[32.7157, -117.1611], zoom_start=9, tiles="OpenStreetMap")
+
+    # Cluster Boundaries Group (if enabled)
+    if show_alpha_shapes:
+        cluster_boundaries = get_alpha_shapes(nam, alpha)
+        cluster_group = folium.FeatureGroup(name="Cluster Boundaries")
+        
+        for _, row in cluster_boundaries.iterrows():
+            folium.GeoJson(
+                row.geometry,
+                style_function=lambda x: {
+                    "fillColor": "#3388ff",
+                    "color": "blue",
+                    "weight": 2,
+                    "fillOpacity": 0.3
+                },
+                tooltip=f"Cluster {row['cluster']}"
+            ).add_to(cluster_group)
+
+        cluster_group.add_to(m)  # Add cluster boundaries to the map
+
+    if len(cluster_centeroid) > 0:
+        centeroid_group = folium.FeatureGroup(name="Centeroid")
+        
+        for index, row in enumerate(cluster_centeroid):
+            latitude, longitude = row[1], row[0]
+            
+            folium.CircleMarker(
+                location=(latitude, longitude),
+                radius=3,
+                color='purple',
+                fill=True,
+                fill_color='purple', 
+                fill_opacity=0.9,  
+                opacity=0.9,    
+                tooltip=(
+                    f"Cluster: {index}<br>"
+                    f"Coordinate: ({row[0]}, {row[1]})<br>"
+                    f"Mean MAE: {row[2]:.3f}<br>"
+            )
+            ).add_to(centeroid_group)
     
     # NAM group
     nam_group = folium.FeatureGroup(name='nam')
@@ -178,7 +230,8 @@ def plot_map(weather_station: gpd.GeoDataFrame, vri_snapshot: gpd.GeoDataFrame, 
             fill_opacity=0.9,  
             opacity=0.9,    
             tooltip=(
-                f"Test"
+                f"Coordinate: ({row['geometry'].x}, {row['geometry'].y})<br>"
+                f"{nam_color_column}: {row[nam_color_column]:.3f}<br>"
         )
         ).add_to(nam_group)
     
@@ -235,6 +288,8 @@ def plot_map(weather_station: gpd.GeoDataFrame, vri_snapshot: gpd.GeoDataFrame, 
     vri_group.add_to(m)
     nam_group.add_to(m)
     weather_station_group.add_to(m)
+    if len(cluster_centeroid) > 0:
+        centeroid_group.add_to(m)  # Add cluster boundaries to the map
     
     # Add layer control to toggle feature groups
     folium.LayerControl().add_to(m)
@@ -246,4 +301,33 @@ def plot_map(weather_station: gpd.GeoDataFrame, vri_snapshot: gpd.GeoDataFrame, 
     # Save Map
     map_path = os.path.join(plots_dir, output_file_name)
     m.save(map_path)
+
+def get_alpha_shapes(df: pd.DataFrame, alpha: float = 1.0):
+    """
+    Compute alpha shapes for each cluster in the dataframe.
+
+    Parameters:
+        df (pd.DataFrame): DataFrame with 'x', 'y', and 'cluster' columns.
+        alpha (float): Alpha parameter for the alpha shape. Lower values result in smoother shapes.
+
+    Returns:
+        gpd.GeoDataFrame: Cluster boundaries as polygon geometries.
+    """
+    cluster_polygons = []
+
+    for cluster_id, group in df.groupby("cluster"):
+        if len(group) < 3:  # Alpha Shape requires at least 3 points
+            continue
+        
+        points = np.array(group[["x", "y"]])
+        alpha_shape = alphashape.alphashape(points, alpha)
+        
+        # Convert MultiPolygon to Polygon if needed
+        if isinstance(alpha_shape, MultiPolygon):
+            for poly in alpha_shape.geoms:
+                cluster_polygons.append({"cluster": cluster_id, "geometry": poly})
+        else:
+            cluster_polygons.append({"cluster": cluster_id, "geometry": alpha_shape})
+    
+    return gpd.GeoDataFrame(cluster_polygons, geometry="geometry")
 
