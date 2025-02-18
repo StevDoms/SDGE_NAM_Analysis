@@ -24,6 +24,7 @@ dependencies:
   - ipykernel
   - pip
   - geopy
+  - alphashape
   - pip:
       - branca
       - ipython
