@@ -6,6 +6,16 @@ from src.model import light_gbm, predict_light_gbm_model
 from src.data import generate_df, generate_gdf, preprocess_df, preprocess_gdf, filter_nam_outside_vri, get_nam_outside_vri_nearest_station
 from src.scripts.generateNamCSV import generate_nam_csv
 from src.scripts.generateElevationCSV import generate_elevation_csv
+from src.polygon_optimization import (
+    load_data,
+    get_nam_points_to_update,
+    filter_nam_within_vri_prediction_gpd,
+    update_nam_polygons,
+    merge_weather_windspeed,
+    spatial_join_vri,
+    calculate_error_metrics
+)
+
 
 def main(targets):
     '''
@@ -21,7 +31,7 @@ def main(targets):
     raw_data_path = [os.path.join('./data/raw', file_path) for file_path in data_params["raw_data"]]
     modified_data_path = [os.path.join('./data/modified', file_path) for file_path in data_params["modified_data"]]
     output_model_path = [os.path.join('./data/modified', file_path) for file_path in data_params["model_prediction"]]
-
+    polygon_op_path =  [os.path.join('./data/modified', file_path) for file_path in data_params["polygon_optimized"]]
     if "create_nam_file" in targets:
         wind_speed_path = raw_data_path[3]
         generate_nam_csv(wind_speed_path)
@@ -55,6 +65,31 @@ def main(targets):
         nam_outside_vri_nearest_station = get_nam_outside_vri_nearest_station(nam_outside_vri, gis_weather_station_with_elevation_gpd)
         nam_outside_vri_prediction = predict_light_gbm_model(light_gbm_model, nam_outside_vri_nearest_station)
         nam_outside_vri_prediction.to_csv(output_model_path[1], index=False)
+
+
+    if "polygon_optimization" in targets:
+        # Load the required datasets
+        gis_weather_station, windspeed_snapshot, src_vri_snapshot, nam_within_vri_prediction_gpd = load_data(raw_data_path, 
+                                                                                                            modified_data_path,
+                                                                                                             output_model_path)
+        # Step 1: Identify NAM points that need an updated polygon
+        nam_points_to_update = get_nam_points_to_update(nam_within_vri_prediction_gpd)
+
+        # Step 2: Filter NAM points that require updates
+        filtered_nam_within_vri = filter_nam_within_vri_prediction_gpd(nam_within_vri_prediction_gpd, nam_points_to_update)
+
+        # Step 3: Update NAM polygons
+        updated_nam_within_vri = update_nam_polygons(src_vri_snapshot, filtered_nam_within_vri, src_vri_snapshot, nam_points_to_update)
+
+        # Step 4: Merge weather station data with wind speed snapshot
+        merged_wind_data = merge_weather_windspeed(gis_weather_station, windspeed_snapshot)
+
+        # Step 5: Perform spatial join with VRI polygons
+        merged_wind_vri = spatial_join_vri(merged_wind_data, src_vri_snapshot)
+
+        # Step 6: Calculate and compare old vs. new wind speed errors
+        optimum_geometry = calculate_error_metrics(nam_points_to_update, updated_nam_within_vri, merged_wind_vri)
+        optimum_geometry.to_csv(polygon_op_path[0], index=False)
 
     return
 
