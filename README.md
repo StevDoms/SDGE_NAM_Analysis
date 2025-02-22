@@ -103,11 +103,16 @@ This script uses the trained LightGBM model to predict errors on both training a
   ```bash
   python run.py predict_model
   ```
+#### 6. Optimize Polygons
+This script analysis the VRI polygons of the top 20 NAM point errors and finds the nearest alternative VRI polygons that can be assigned to those NAM points to reduce the errors.
+  ```bash
+  python run.py polygon_optimization
+  ```
 
 #### Running the Full Training Pipeline
 To execute all steps in sequence, run:
   ```bash
-  python run.py create_nam_file create_elevation_file process_model_input light_gbm_model predict_model
+  python run.py create_nam_file create_elevation_file process_model_input light_gbm_model predict_model polygon_optimization
   ```
 
 #### Recommended Run
@@ -115,7 +120,7 @@ For better organization, execute these commands separately as follows:
   ```bash
   python run.py create_nam_file 
   python run.py create_elevation_file 
-  python run.py process_model_input light_gbm_model predict_model
+  python run.py process_model_input light_gbm_model predict_model polygon_optimization
   ```
 ---
 
