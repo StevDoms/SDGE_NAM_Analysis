@@ -15,7 +15,6 @@ from src.analysis import custom_groupby, find_outliers_iqr
 
 
 def load_data(raw_data_path: str, modified_data_path: str, output_model_path: str) -> Tuple[gpd.GeoDataFrame, gpd.GeoDataFrame, gpd.GeoDataFrame, gpd.GeoDataFrame]:
-    
     # Reading raw data
     gis_weather_station, src_vri_snapshot, nam, windspeed_snapshot = generate_df(raw_data_path) 
     gis_weather_station, windspeed_snapshot = preprocess_df(gis_weather_station, windspeed_snapshot)
@@ -24,10 +23,10 @@ def load_data(raw_data_path: str, modified_data_path: str, output_model_path: st
     gis_weather_station_with_elevation, nam_with_elevation = generate_df(modified_data_path)
     gis_weather_station_with_elevation_gpd, src_vri_snapshot_gpd, nam_with_elevation_gpd = generate_gdf(
         gis_weather_station_with_elevation, src_vri_snapshot, nam_with_elevation)
-
-    nam_within_vri_prediction, nam_outside_vri_prediction = generate_df(output_model_path)
     
-    nam_within_vri_prediction_gpd = convert_to_gdf(nam_within_vri_prediction)
+    # Readiing data from LightGBM model
+    nam_within_vri_prediction, nam_outside_vri_prediction = generate_df(output_model_path)
+    nam_within_vri_prediction_gpd, nam_outside_vri_prediction_gpd = convert_to_gdf(nam_within_vri_prediction, True), convert_to_gdf(nam_outside_vri_prediction)
     
     return gis_weather_station_with_elevation_gpd, windspeed_snapshot, src_vri_snapshot_gpd, nam_within_vri_prediction_gpd
 
@@ -192,9 +191,11 @@ def calculate_error_metrics(nam_points_to_update: List[Point], nam_within_vri_pr
         "geometry_x",
         "nam_wind_speed",
         "New_VRI_Anemometer",
-        "wind_speed"
+        "wind_speed",
+        "anemometer_x"
     ]
-    
+
+
     filtered_merged_wind_data = merged_filtered_wind_data[important_columns]
     
     # Filter to only include rows where New_VRI_Anemometer has changed
@@ -207,6 +208,7 @@ def calculate_error_metrics(nam_points_to_update: List[Point], nam_within_vri_pr
         filtered_merged_wind_data["nam_wind_speed"] - filtered_merged_wind_data["wind_speed"]
     ).abs()
 
+    filtered_merged_wind_data = filtered_merged_wind_data.rename(columns={'anemometer_x': 'Old_VRI_Polygon'})
 
         # Group both DataFrames by 'nam_geometry' and compute mean errors
     new_error_df = filtered_merged_wind_data.groupby("geometry_x")[["new_abs_wind_speed_error"]].mean().reset_index()
@@ -220,8 +222,8 @@ def calculate_error_metrics(nam_points_to_update: List[Point], nam_within_vri_pr
 
         # Extract new VRI polygon information
     filtered_merged_wind_data.rename(columns={'geometry_x': 'geometry'}, inplace=True)
-    new_vri_info = filtered_merged_wind_data[["geometry", "New_VRI_Anemometer"]].drop_duplicates()
-    
+    new_vri_info = filtered_merged_wind_data[["geometry", "New_VRI_Anemometer", "Old_VRI_Polygon"]].drop_duplicates()
+
     # Merge to include the new VRI polygons
     comparison_df = comparison_df.merge(new_vri_info, on="geometry", how="left")
     
@@ -230,7 +232,9 @@ def calculate_error_metrics(nam_points_to_update: List[Point], nam_within_vri_pr
     
     # Rename column for clarity
     optimum_geometry.rename(columns={"New_VRI_Anemometer": "New_VRI_Polygon"}, inplace=True)
-
+    optimum_geometry = optimum_geometry.sort_values('error_difference', ascending=False)\
+                                          .drop_duplicates(subset=['geometry'], keep='first')\
+                                          .reset_index(drop=True)
     return optimum_geometry
 
 
