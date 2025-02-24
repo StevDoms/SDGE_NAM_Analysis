@@ -26,7 +26,7 @@ def load_data(raw_data_path: str, modified_data_path: str, output_model_path: st
     
     # Readiing data from LightGBM model
     nam_within_vri_prediction, nam_outside_vri_prediction = generate_df(output_model_path)
-    nam_within_vri_prediction_gpd, nam_outside_vri_prediction_gpd = convert_to_gdf(nam_within_vri_prediction, True), convert_to_gdf(nam_outside_vri_prediction)
+    nam_within_vri_prediction_gpd, nam_outside_vri_prediction_gpd = convert_to_gdf(nam_within_vri_prediction, col = 'nam_geometry'), convert_to_gdf(nam_outside_vri_prediction)
     
     return gis_weather_station_with_elevation_gpd, windspeed_snapshot, src_vri_snapshot_gpd, nam_within_vri_prediction_gpd
 
