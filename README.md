@@ -132,3 +132,8 @@ To run the notebooks in this repository, we need to have a kernal that supports 
   python -m ipykernel install --user --name=venv
   ```
 Once installed, you could set venv as the kernal when running the notebook.
+Please run the notebook in the following orders: 
+  ```bash
+  EDA.ipynb
+  data_analysis.ipynb
+  ```
