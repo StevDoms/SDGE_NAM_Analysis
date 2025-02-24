@@ -161,50 +161,10 @@ def plot_correlation_matrix(data, method="pearson", title="Correlation Matrix", 
     plt.show()
 
 
-def plot_map(weather_station: gpd.GeoDataFrame, vri_snapshot: gpd.GeoDataFrame, nam: Union[gpd.GeoDataFrame, pd.DataFrame], nam_color_column: str, output_file_name: str, show_alpha_shapes: bool = False, alpha: float = 1.0, cluster_centeroid: np.array = np.array([])):
+def plot_map(weather_station: gpd.GeoDataFrame, vri_snapshot: gpd.GeoDataFrame, nam: Union[gpd.GeoDataFrame, pd.DataFrame], nam_color_column: str, output_file_name: str, error_boundary: gpd.GeoDataFrame = None, spans: gpd.GeoDataFrame = None):
     # Initialize the map centering at San Diego City
     m = folium.Map(location=[32.7157, -117.1611], zoom_start=9, tiles="OpenStreetMap")
 
-    # Cluster Boundaries Group (if enabled)
-    if show_alpha_shapes:
-        cluster_boundaries = get_alpha_shapes(nam, alpha)
-        cluster_group = folium.FeatureGroup(name="Cluster Boundaries")
-        
-        for _, row in cluster_boundaries.iterrows():
-            folium.GeoJson(
-                row.geometry,
-                style_function=lambda x: {
-                    "fillColor": "#3388ff",
-                    "color": "blue",
-                    "weight": 2,
-                    "fillOpacity": 0.3
-                },
-                tooltip=f"Cluster {row['cluster']}"
-            ).add_to(cluster_group)
-
-        cluster_group.add_to(m)  # Add cluster boundaries to the map
-
-    if len(cluster_centeroid) > 0:
-        centeroid_group = folium.FeatureGroup(name="Centeroid")
-        
-        for index, row in enumerate(cluster_centeroid):
-            latitude, longitude = row[1], row[0]
-            
-            folium.CircleMarker(
-                location=(latitude, longitude),
-                radius=3,
-                color='purple',
-                fill=True,
-                fill_color='purple', 
-                fill_opacity=0.9,  
-                opacity=0.9,    
-                tooltip=(
-                    f"Cluster: {index}<br>"
-                    f"Coordinate: ({row[0]}, {row[1]})<br>"
-                    f"Mean MAE: {row[2]:.3f}<br>"
-            )
-            ).add_to(centeroid_group)
-    
     # NAM group
     nam_group = folium.FeatureGroup(name='nam')
     
@@ -283,13 +243,46 @@ def plot_map(weather_station: gpd.GeoDataFrame, vri_snapshot: gpd.GeoDataFrame, 
     )
     
     vri_points.add_to(vri_group)
+
+    # Optionally add the error boundary group if provided
+    if error_boundary is not None:
+        error_boundary_group = folium.FeatureGroup(name='error_boundary')
+        
+        # Load error boundary GeoJSON
+        error_boundary_points = folium.GeoJson(
+            error_boundary,
+            style_function=lambda x: {
+                "fillColor": "#9370DB",
+                "color": "black",
+                "weight": 0.3,
+                "fillOpacity": 0.5
+            },
+        )
+        
+        error_boundary_points.add_to(error_boundary_group)
+        error_boundary_group.add_to(m)
+
+    if spans is not None:
+        # Spans
+        spans_group = folium.FeatureGroup(name='spans_group')
+        
+        # Load Spans GeoJSON
+        span_map = folium.GeoJson(
+            spans,
+            style_function=lambda x: {
+                "fillColor": "black",
+                "color": "black",
+                "weight": 1,
+                "fillOpacity": 1
+            },
+        )
+        span_map.add_to(spans_group)
+        spans_group.add_to(m)
     
     # Add feature groups to the map
     vri_group.add_to(m)
     nam_group.add_to(m)
     weather_station_group.add_to(m)
-    if len(cluster_centeroid) > 0:
-        centeroid_group.add_to(m)  # Add cluster boundaries to the map
     
     # Add layer control to toggle feature groups
     folium.LayerControl().add_to(m)
@@ -301,33 +294,4 @@ def plot_map(weather_station: gpd.GeoDataFrame, vri_snapshot: gpd.GeoDataFrame, 
     # Save Map
     map_path = os.path.join(plots_dir, output_file_name)
     m.save(map_path)
-
-def get_alpha_shapes(df: pd.DataFrame, alpha: float = 1.0):
-    """
-    Compute alpha shapes for each cluster in the dataframe.
-
-    Parameters:
-        df (pd.DataFrame): DataFrame with 'x', 'y', and 'cluster' columns.
-        alpha (float): Alpha parameter for the alpha shape. Lower values result in smoother shapes.
-
-    Returns:
-        gpd.GeoDataFrame: Cluster boundaries as polygon geometries.
-    """
-    cluster_polygons = []
-
-    for cluster_id, group in df.groupby("cluster"):
-        if len(group) < 3:  # Alpha Shape requires at least 3 points
-            continue
-        
-        points = np.array(group[["x", "y"]])
-        alpha_shape = alphashape.alphashape(points, alpha)
-        
-        # Convert MultiPolygon to Polygon if needed
-        if isinstance(alpha_shape, MultiPolygon):
-            for poly in alpha_shape.geoms:
-                cluster_polygons.append({"cluster": cluster_id, "geometry": poly})
-        else:
-            cluster_polygons.append({"cluster": cluster_id, "geometry": alpha_shape})
-    
-    return gpd.GeoDataFrame(cluster_polygons, geometry="geometry")
 
