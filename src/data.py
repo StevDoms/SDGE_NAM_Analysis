@@ -8,7 +8,7 @@ from src.util import create_point, haversine_distance
 def generate_df(input_list: List[str]) -> List[pd.DataFrame]:
     return [pd.read_csv(file) for file in input_list]
 
-def convert_to_gdf(df: pd.DataFrame, is_nam: bool = False) -> gpd.GeoDataFrame:
+def convert_to_gdf(df: pd.DataFrame, col: str = 'geometry', espg: str = "EPSG:4326") -> gpd.GeoDataFrame:
     """
     Converts a DataFrame with WKT geometry strings to a GeoDataFrame.
     
@@ -19,13 +19,11 @@ def convert_to_gdf(df: pd.DataFrame, is_nam: bool = False) -> gpd.GeoDataFrame:
     Returns:
         gpd.GeoDataFrame: A GeoDataFrame with a valid geometry column.
     """
-    geom = 'geometry' if not is_nam else 'nam_geometry'
-
     # Convert WKT strings to Shapely geometry
-    df['geometry'] = df[geom].apply(wkt.loads)
+    df['geometry'] = df[col].apply(wkt.loads)
 
     # Create GeoDataFrame with correct CRS
-    gdf = gpd.GeoDataFrame(df, geometry='geometry', crs="EPSG:4326")
+    gdf = gpd.GeoDataFrame(df, geometry='geometry', crs=espg)
     
     return gdf
     
