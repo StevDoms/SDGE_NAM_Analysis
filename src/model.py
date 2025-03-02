@@ -101,47 +101,6 @@ def predict_light_gbm_model(model: lgb.LGBMRegressor, input_data: gpd.GeoDataFra
 
     return input_data
 
-def cluster_kmeans_nam_data(nam_gdf: gpd.GeoDataFrame, start_range: int, end_range: int, random_state: int = 42):
-    """
-    Clusters NAM data using KMeans and adds a 'cluster' column to the GeoDataFrame.
-
-    Parameters:
-    - nam_gdf (gpd.GeoDataFrame): A GeoDataFrame containing NAM data with a 'geometry' column.
-    - n_clusters (int): Number of clusters for KMeans. Default is 20.
-    - random_state (int): Random state for reproducibility. Default is 42.
-
-    Returns:
-    - gpd.GeoDataFrame: The input GeoDataFrame with an additional 'cluster' column.
-    """
-
-    # Ensure 'geometry' column exists and extract coordinates
-    nam_gdf["x"] = nam_gdf.apply(lambda row: row['geometry'].x, axis=1)
-    nam_gdf["y"] = nam_gdf.apply(lambda row: row['geometry'].y, axis=1)
-
-    # Standardize features (important for clustering)
-    scaler = StandardScaler()
-    df_scaled = scaler.fit_transform(nam_gdf[["x", "y", "abs_wind_speed_error_pred"]])
-
-    silhouette_scores = []
-    k_values = range(start_range, end_range)
-    
-    for k in k_values:
-        kmeans = KMeans(n_clusters=k, random_state=random_state, n_init=10)
-        labels = kmeans.fit_predict(df_scaled)
-        score = silhouette_score(df_scaled, labels)
-        silhouette_scores.append((k, score))  # Store as (k, score) pair
-    
-    # Sort by silhouette score in descending order
-    sorted_scores = sorted(silhouette_scores, key=lambda x: x[1], reverse=True)
-    print(f"Best Cluster: {sorted_scores[0]}")
-
-    # Apply KMeans clustering
-    kmeans = KMeans(n_clusters=sorted_scores[0][0], random_state=random_state, n_init=10)
-    nam_gdf["cluster"] = kmeans.fit_predict(df_scaled)
-    centroids = scaler.inverse_transform(kmeans.cluster_centers_)
-
-    return nam_gdf, centroids
-
     
     
 
