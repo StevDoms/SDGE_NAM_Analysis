@@ -85,6 +85,8 @@ def light_gbm(input_gdf: gpd.GeoDataFrame) -> lgb.LGBMRegressor:
     print(f"Mean Absolute Error: {mae:.3f}")
     print(f"R² Score: {r2:.3f}")
 
+    save_feature_importance(best_model, input_gdf[features])
+
     return best_model
 
 
@@ -100,6 +102,35 @@ def predict_light_gbm_model(model: lgb.LGBMRegressor, input_data: gpd.GeoDataFra
     input_data['abs_wind_speed_error_pred'] = target_prediction
 
     return input_data
+
+def save_feature_importance(model, X, filename="./data/modified/feature_importance.csv", normalize=True):
+    """
+    Saves the feature importance of a given model to a CSV file.
+
+    Parameters:
+    - model: A trained model that has the `feature_importances_` attribute.
+    - X: The DataFrame containing feature names.
+    - filename: Name of the output CSV file (default: 'feature_importance.csv').
+    - normalize: Whether to normalize importance values to percentages.
+
+    Returns:
+    - feature_importance_df: A DataFrame containing feature importance.
+    """
+    importance_values = model.feature_importances_
+    
+    if normalize:
+        importance_values = importance_values / np.sum(importance_values)  # Normalize to sum to 1
+    
+    feature_importance_df = pd.DataFrame({
+        'Feature': X.columns,
+        'Importance': importance_values
+    })
+    
+    # Save to CSV
+    feature_importance_df.to_csv(filename, index=False)
+    
+    print(f"Feature importance saved to {filename}")
+    return feature_importance_df
 
     
     
