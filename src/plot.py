@@ -110,6 +110,11 @@ def plot_data(data, x, y=None, plot_type="hist", bins=30, title=None, xlabel=Non
             raise ValueError("Bar plot requires both x and y columns.")
         plt.bar(data[x], data[y], color=color, alpha=0.7)
 
+    elif plot_type == "hbar":
+        if y is None:
+            raise ValueError("Horizontal bar plot requires both x and y columns.")
+        plt.barh(data[y], data[x], color=color, alpha=0.7)
+
     else:
         raise ValueError("Invalid plot_type. Choose from 'hist', 'scatter', 'line', or 'bar'.")
 
